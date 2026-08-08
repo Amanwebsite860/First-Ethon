@@ -14,13 +14,13 @@
 // LLM to invent a new justification, so the stated rationale always
 // matches the actual editorial decision.
 
-import OpenAI from 'openai';
+import { GoogleGenAI } from '@google/genai';
 import { persona } from '../config/persona.js';
 import { generatePostId } from '../utils/idGenerator.js';
 import logger from '../utils/logger.js';
 
-const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
-const WRITER_MODEL = process.env.OPENAI_MODEL_WRITER || 'gpt-4o';
+const client = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+const WRITER_MODEL = process.env.GEMINI_MODEL_WRITER || 'gemini-2.5-pro';
 
 function buildWriterPrompt(topic, judgment) {
   return `You are ${persona.name}, ${persona.tagline}
@@ -46,6 +46,17 @@ Respond with ONLY valid JSON, no markdown fences:
 }
 
 /**
+ * Extract the raw text from a Gemini generateContent response and strip
+ * markdown code fences if the model wraps its JSON in them despite being
+ * asked not to (this happens occasionally even with JSON mode).
+ * @param {any} response
+ */
+function extractJsonText(response) {
+  const raw = (response.text || '').trim();
+  return raw.replace(/^```(?:json)?\s*/i, '').replace(/```\s*$/, '');
+}
+
+/**
  * Generate a full post object for an approved topic.
  *
  * @param {{title: string, url: string}} topic
@@ -54,14 +65,16 @@ Respond with ONLY valid JSON, no markdown fences:
  */
 export async function writePost(topic, judgment) {
   try {
-    const completion = await client.chat.completions.create({
+    const response = await client.models.generateContent({
       model: WRITER_MODEL,
-      messages: [{ role: 'user', content: buildWriterPrompt(topic, judgment) }],
-      temperature: 0.7,
-      response_format: { type: 'json_object' },
+      contents: buildWriterPrompt(topic, judgment),
+      config: {
+        temperature: 0.7,
+        responseMimeType: 'application/json',
+      },
     });
 
-    const parsed = JSON.parse(completion.choices[0]?.message?.content || '{}');
+    const parsed = JSON.parse(extractJsonText(response) || '{}');
     const text = (parsed.text || '').trim();
 
     if (!text) {

@@ -57,9 +57,9 @@ Go to **Settings → Environment Variables**. Confirm/add:
 
 | Variable | Value | Notes |
 |---|---|---|
-| `OPENAI_API_KEY` | your key from platform.openai.com | required |
-| `OPENAI_MODEL_JUDGE` | `gpt-4o-mini` | optional, this is the default |
-| `OPENAI_MODEL_WRITER` | `gpt-4o` | optional, this is the default |
+| `GEMINI_API_KEY` | your key from [Google AI Studio](https://aistudio.google.com/apikey) | required |
+| `GEMINI_MODEL_JUDGE` | `gemini-2.5-flash` | optional, this is the default |
+| `GEMINI_MODEL_WRITER` | `gemini-2.5-pro` | optional, this is the default |
 | `CRON_SECRET` | a random string, e.g. output of `openssl rand -hex 32` | required — protects `/api/cron/cycle` |
 | `KV_REST_API_URL` | from step 3 (may already be set) | required |
 | `KV_REST_API_TOKEN` | from step 3 (may already be set) | required |
@@ -75,22 +75,42 @@ a reason not to.
 48-hour evaluation window.**
 
 - **If you have (or will get) Vercel Pro**: no action needed —
-  `vercel.json`'s hourly schedule works as-is. Skip to step 6.
-- **If you're on Vercel Hobby (free)**: Hobby only allows cron jobs once
-  per day, which is too sparse. Choose one:
-  - **Upgrade to Pro** for the duration of the hackathon (simplest, costs
-    money).
+  `vercel.json`'s hourly schedule works as-is. Skip to step 6. A **14-day
+  free trial with $20 in credits** is available, which comfortably covers
+  a 48-hour hackathon window at zero cost — the simplest path if you don't
+  mind putting a card on file.
+- **If you're staying on Vercel Hobby (free)**: confirmed — Hobby doesn't
+  just throttle faster schedules, it **refuses to deploy** any cron
+  expression that would run more than once/day (deployment fails outright
+  with an error). Choose one:
+  - **Start the Pro free trial** for the hackathon window (simplest, see
+    above).
   - **Use an external free scheduler** instead:
-    1. Remove or ignore the `crons` block in `vercel.json` (a Hobby
-       project will just run it once/day regardless; leaving it doesn't
-       break anything, but don't rely on it).
-    2. Set up a free account at [cron-job.org](https://cron-job.org) (or
-       use a GitHub Actions scheduled workflow in this or another repo).
-    3. Point it at `https://<your-deploy>.vercel.app/api/cron/cycle`,
-       method `GET`, with header `Authorization: Bearer <CRON_SECRET>`
-       (the same value you set in step 4).
-    4. Set the interval — every 30–60 minutes is reasonable for spreading
-       posts across a 48-hour window without excessive LLM spend.
+    1. Edit `vercel.json` so its `crons` block is either removed entirely
+       or set to a valid once-daily schedule (e.g. `"0 0 * * *"`) — a
+       faster schedule will fail deployment on Hobby, not just get
+       silently capped.
+    2. Two free options, pick one:
+       - **cron-job.org** — free web dashboard, no code. Add a job
+         targeting `https://<your-deploy>.vercel.app/api/cron/cycle`,
+         method `GET`, header `Authorization: Bearer <CRON_SECRET>`,
+         interval 30–60 minutes.
+       - **GitHub Actions** — a ready-to-use workflow is already in this
+         repo at `.github/workflows/trigger-cycle.yml`. To enable it:
+         1. In your GitHub repo, go to **Settings → Secrets and variables
+            → Actions → New repository secret** and add:
+            - `AGENT_BASE_URL` — e.g. `https://your-deploy.vercel.app`
+              (no trailing slash)
+            - `CRON_SECRET` — the same value you set in Vercel's env vars
+         2. That's it — the workflow runs every 30 minutes automatically
+            once merged to the default branch. You can also trigger it
+            manually from the repo's **Actions** tab (`workflow_dispatch`)
+            to smoke-test the setup immediately rather than waiting for
+            the schedule.
+         3. Note: GitHub's own schedule timing isn't perfectly precise
+            either (can be delayed under platform load) — same caveat as
+            Vercel Cron, just a free way to get a tighter cadence than
+            Hobby allows.
 
 ## 6. Deploy
 

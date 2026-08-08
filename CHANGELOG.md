@@ -36,3 +36,22 @@ All notable progress on this project, in build order.
 
 ### Known issue, not fixed (flagging for a decision, not deciding silently)
 - `@vercel/kv` (the storage dependency) is deprecated by Vercel — existing KV stores are being migrated to Upstash Redis under Vercel's Marketplace integrations, and new projects are pointed at a Redis marketplace integration instead. The current code still works as of this writing (Vercel KV's REST API is unchanged), but this is worth confirming when you provision storage in Vercel — see `DEPLOY.md` step 3.
+
+## [Unreleased] — Cron alternative
+
+### Added
+- `.github/workflows/trigger-cycle.yml`: a GitHub Actions scheduled workflow (every 30 min, plus manual `workflow_dispatch`) that hits `/api/cron/cycle` with the `CRON_SECRET` bearer token — a free alternative to Vercel's own cron for accounts staying on the Hobby plan, since Hobby confirmed to hard-fail deployment on any cron expression faster than once/day (not just throttle it).
+- Requires two GitHub repo secrets to function: `AGENT_BASE_URL` and `CRON_SECRET` (setup steps in `DEPLOY.md` step 5).
+
+### Corrected
+- `DEPLOY.md` step 5 previously stated Hobby would silently cap a too-frequent cron to once/day. Corrected based on Vercel's own docs: an invalid schedule **fails deployment outright** with an error, it doesn't get silently downgraded.
+
+## [Unreleased] — LLM provider switch: OpenAI → Gemini
+
+### Changed
+- Swapped LLM provider from OpenAI to **Google Gemini** across all three call sites: `src/services/editorialJudge.js`, `src/services/writer.js`, `src/services/memory.js` (similarity check). Uses the current `@google/genai` SDK (the `openai` package's deprecated predecessor, `@google/generative-ai`, was deliberately avoided).
+- Default models: `gemini-2.5-flash` for judgment/similarity (fast, cheap — matches the old `gpt-4o-mini` role), `gemini-2.5-pro` for writing (matches the old `gpt-4o` role). Both configurable via env vars.
+- Env vars renamed: `OPENAI_API_KEY` → `GEMINI_API_KEY`, `OPENAI_MODEL_JUDGE` → `GEMINI_MODEL_JUDGE`, `OPENAI_MODEL_WRITER` → `GEMINI_MODEL_WRITER`. Updated in `.env.example`, `checkEnv.js`, `README.md`, `DEPLOY.md`.
+- `package.json`: removed `openai` dependency, added `@google/genai` (currently `^2.16.0`, confirmed against the live npm registry rather than assumed).
+- JSON response handling: Gemini's `responseMimeType: 'application/json'` config is used (equivalent to OpenAI's `response_format: json_object`), with a defensive markdown-fence-stripping step retained in case the model wraps output in code fences anyway.
+- Verified by booting the app with dummy Gemini env vars and confirming no import/wiring errors — same smoke-test approach used in the earlier bug-fix audit.

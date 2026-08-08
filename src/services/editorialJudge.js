@@ -10,12 +10,12 @@
 // relevant now — so this step doesn't just return true/false, it returns
 // the reasoning too, which the writer step will reuse/expand on.
 
-import OpenAI from 'openai';
+import { GoogleGenAI } from '@google/genai';
 import { persona } from '../config/persona.js';
 import logger from '../utils/logger.js';
 
-const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
-const JUDGE_MODEL = process.env.OPENAI_MODEL_JUDGE || 'gpt-4o-mini';
+const client = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+const JUDGE_MODEL = process.env.GEMINI_MODEL_JUDGE || 'gemini-2.5-flash';
 
 function buildJudgePrompt(topic) {
   return `You are the editorial gatekeeper for an AI persona named ${persona.name} (${persona.domain}).
@@ -44,21 +44,33 @@ Respond with ONLY valid JSON, no markdown fences, in this exact shape:
 }
 
 /**
+ * Extract the raw text from a Gemini generateContent response and strip
+ * markdown code fences if the model wraps its JSON in them despite being
+ * asked not to (this happens occasionally even with JSON mode).
+ * @param {any} response
+ */
+function extractJsonText(response) {
+  const raw = (response.text || '').trim();
+  return raw.replace(/^```(?:json)?\s*/i, '').replace(/```\s*$/, '');
+}
+
+/**
  * Judge a single candidate topic.
  * @param {{title: string, url: string, source: string, score: number}} topic
  * @returns {Promise<{shouldPublish: boolean, whySelected: string, whyRelevantNow: string, rejectionReason: string}>}
  */
 export async function judgeTopic(topic) {
   try {
-    const completion = await client.chat.completions.create({
+    const response = await client.models.generateContent({
       model: JUDGE_MODEL,
-      messages: [{ role: 'user', content: buildJudgePrompt(topic) }],
-      temperature: 0.3,
-      response_format: { type: 'json_object' },
+      contents: buildJudgePrompt(topic),
+      config: {
+        temperature: 0.3,
+        responseMimeType: 'application/json',
+      },
     });
 
-    const raw = completion.choices[0]?.message?.content || '{}';
-    const parsed = JSON.parse(raw);
+    const parsed = JSON.parse(extractJsonText(response) || '{}');
 
     return {
       shouldPublish: Boolean(parsed.shouldPublish),

@@ -40,9 +40,9 @@ evaluation window rather than front-loaded.
 npm install
 ```
 
-### 2. Get an OpenAI API key
+### 2. Get a Gemini API key
 
-Create one at [platform.openai.com](https://platform.openai.com/api-keys).
+Create one at [Google AI Studio](https://aistudio.google.com/apikey) — free tier is available.
 
 ### 3. Set up Vercel KV
 
@@ -58,7 +58,7 @@ Create one at [platform.openai.com](https://platform.openai.com/api-keys).
 cp .env.example .env
 ```
 
-Fill in `.env` with your OpenAI key and Vercel KV credentials from steps 2–3.
+Fill in `.env` with your Gemini key and Vercel KV credentials from steps 2–3.
 Leave `CRON_SECRET` blank for local dev (see `.env.example` comments) or set
 any random string — you'll set the real value in Vercel's dashboard at deploy
 time (step 6).

@@ -16,11 +16,11 @@
 // This keeps cost sane: most duplicate topics get caught by the free
 // heuristic, and the LLM is a fallback, not the first line of defense.
 
-import OpenAI from 'openai';
+import { GoogleGenAI } from '@google/genai';
 import logger from '../utils/logger.js';
 
-const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
-const JUDGE_MODEL = process.env.OPENAI_MODEL_JUDGE || 'gpt-4o-mini';
+const client = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+const JUDGE_MODEL = process.env.GEMINI_MODEL_JUDGE || 'gemini-2.5-flash';
 
 // How many of the most recent posts to check the new topic against via LLM.
 // Keeps prompt size and cost bounded even as the feed grows over 48 hours.
@@ -79,13 +79,16 @@ Respond with ONLY valid JSON, no markdown fences:
 { "isDuplicate": true or false, "reason": "one short sentence" }`;
 
   try {
-    const completion = await client.chat.completions.create({
+    const response = await client.models.generateContent({
       model: JUDGE_MODEL,
-      messages: [{ role: 'user', content: prompt }],
-      temperature: 0.2,
-      response_format: { type: 'json_object' },
+      contents: prompt,
+      config: {
+        temperature: 0.2,
+        responseMimeType: 'application/json',
+      },
     });
-    const parsed = JSON.parse(completion.choices[0]?.message?.content || '{}');
+    const raw = (response.text || '').trim().replace(/^```(?:json)?\s*/i, '').replace(/```\s*$/, '');
+    const parsed = JSON.parse(raw || '{}');
     return {
       isDuplicate: Boolean(parsed.isDuplicate),
       reason: parsed.reason || '',

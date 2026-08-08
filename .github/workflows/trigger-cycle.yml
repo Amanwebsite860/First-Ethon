@@ -1,0 +1,49 @@
+name: Trigger autonomous cycle
+
+# Runs on a schedule to hit /api/cron/cycle — an alternative to Vercel's
+# built-in cron for accounts on the Hobby plan, where Vercel Cron is
+# restricted to once per day. GitHub Actions schedules aren't perfectly
+# precise either (GitHub can delay firing under load), but it's a free way
+# to get a tighter cadence than Hobby allows.
+#
+# Setup required (see DEPLOY.md):
+#   1. In this repo's Settings -> Secrets and variables -> Actions, add:
+#        - AGENT_BASE_URL   e.g. https://your-deploy.vercel.app
+#        - CRON_SECRET      the same value set in Vercel's env vars
+#   2. If you're using Vercel's own cron too, make sure it's harmless
+#      (once/day or removed) so the two don't fight over publishing more
+#      than intended.
+
+on:
+  schedule:
+    # Every 30 minutes. Adjust to taste — tighter isn't necessarily better,
+    # since editorialJudge + memory checks may reject most cycles anyway.
+    - cron: '*/30 * * * *'
+  # Lets you manually trigger a run from the Actions tab, e.g. to smoke-test
+  # the setup without waiting for the schedule.
+  workflow_dispatch: {}
+
+jobs:
+  trigger-cycle:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Call /api/cron/cycle
+        run: |
+          if [ -z "${{ secrets.AGENT_BASE_URL }}" ] || [ -z "${{ secrets.CRON_SECRET }}" ]; then
+            echo "::error::AGENT_BASE_URL and/or CRON_SECRET secrets are not set. See DEPLOY.md."
+            exit 1
+          fi
+
+          response=$(curl -s -w "\n%{http_code}" \
+            -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
+            "${{ secrets.AGENT_BASE_URL }}/api/cron/cycle")
+
+          http_code=$(echo "$response" | tail -n1)
+          body=$(echo "$response" | sed '$d')
+
+          echo "Response ($http_code): $body"
+
+          if [ "$http_code" -ge 400 ]; then
+            echo "::error::Cron trigger failed with HTTP $http_code"
+            exit 1
+          fi

@@ -7,7 +7,7 @@
 
 import logger from './logger.js';
 
-const REQUIRED_VARS = ['OPENAI_API_KEY', 'KV_REST_API_URL', 'KV_REST_API_TOKEN'];
+const REQUIRED_VARS = ['GEMINI_API_KEY', 'KV_REST_API_URL', 'KV_REST_API_TOKEN'];
 
 // Not required to boot, but worth warning about since their absence
 // silently changes behavior (e.g. cron endpoint becomes unauthenticated).
