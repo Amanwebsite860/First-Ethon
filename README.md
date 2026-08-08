@@ -88,6 +88,12 @@ curl http://localhost:3000/api/cron/cycle
 
 ### 6. Deploy to Vercel
 
+For a full step-by-step walkthrough (Vercel project setup, KV provisioning,
+env vars, the cron plan decision, and post-deploy smoke testing), see
+[`DEPLOY.md`](./DEPLOY.md).
+
+Quick version:
+
 ```bash
 npm i -g vercel   # if not already installed
 vercel

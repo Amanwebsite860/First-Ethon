@@ -25,3 +25,14 @@ All notable progress on this project, in build order.
 
 ### Docs
 - Finalized `README.md`: full setup walkthrough (install → OpenAI key → Vercel KV provisioning → env vars → local run → deploy), architecture diagram, complete API contract, project structure tree, and known limitations section
+- Added `DEPLOY.md`: step-by-step deploy checklist covering GitHub push, Vercel project creation, KV provisioning, environment variable setup, the Hobby-vs-Pro cron decision (with concrete external-scheduler fallback steps), live smoke testing, and a final pre-submission checklist
+
+### Fixed (audit pass)
+- Global error handler in `src/index.js` always returned HTTP 500, even for client errors like malformed JSON request bodies (which `body-parser` correctly flags as a 400). Now respects the error's own status code when it's a legitimate 4xx.
+- Removed `AGENT_CYCLE_INTERVAL_MINUTES` from `.env.example` — it was documented but never actually read anywhere in the code (cadence is controlled entirely by `vercel.json` / the external cron trigger). Left in, it was misleading.
+- Documented `PORT` in `.env.example` — it's read in `src/index.js` for local dev but was previously undocumented.
+- Verified end-to-end by actually booting the server and hitting every route (`/health`, `/api/agent/init`, `/api/agent/feed`, `/api/cron/cycle` with and without auth) with dummy credentials — confirmed error handling, 401/400/404 status codes, and logging all behave correctly with no crashes or unhandled exceptions.
+- Added `package-lock.json` (generated via `npm install`) to lock dependency versions.
+
+### Known issue, not fixed (flagging for a decision, not deciding silently)
+- `@vercel/kv` (the storage dependency) is deprecated by Vercel — existing KV stores are being migrated to Upstash Redis under Vercel's Marketplace integrations, and new projects are pointed at a Redis marketplace integration instead. The current code still works as of this writing (Vercel KV's REST API is unchanged), but this is worth confirming when you provision storage in Vercel — see `DEPLOY.md` step 3.

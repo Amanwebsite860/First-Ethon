@@ -59,11 +59,20 @@ app.use((req, res) => {
 // unexpected error mid-cycle. Must be defined last, with 4 args, for
 // Express to recognize it as an error handler.
 app.use((err, req, res, next) => {
-  logger.error('Unhandled error', err);
   if (res.headersSent) {
     return next(err);
   }
-  res.status(500).json({ error: 'Internal server error' });
+  // body-parser (and some other middleware) throw errors that already
+  // carry a meaningful client-error status (e.g. 400 for malformed JSON).
+  // Respect that instead of always reporting 500, so a bad request from
+  // the caller is correctly distinguished from an actual server failure.
+  const status = err.status && err.status >= 400 && err.status < 500 ? err.status : 500;
+  if (status >= 500) {
+    logger.error('Unhandled error', err);
+  } else {
+    logger.warn('Client error', err.message);
+  }
+  res.status(status).json({ error: status < 500 ? 'Malformed request' : 'Internal server error' });
 });
 
 // Only start a listening server when run directly (local dev). When
