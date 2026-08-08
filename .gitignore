@@ -1,0 +1,35 @@
+# --- Environment variables ---
+.env
+.env.local
+.env.*.local
+
+# --- Dependencies ---
+node_modules/
+
+# --- Vercel ---
+.vercel
+
+# --- Logs ---
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# --- Local data (if any local/dev fallback storage is used) ---
+data/
+*.db
+*.sqlite
+
+# --- OS files ---
+.DS_Store
+Thumbs.db
+
+# --- Editor/IDE ---
+.vscode/
+.idea/
+*.swp
+
+# --- Build output ---
+dist/
+build/
+.next/
