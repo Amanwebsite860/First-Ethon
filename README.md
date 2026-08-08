@@ -107,27 +107,49 @@ effect.
 **⚠️ Before you rely on the cron schedule, read the note below** — it
 affects whether posts actually publish "over time" during evaluation.
 
-## ⚠️ Important: Vercel Cron plan limits
+## ⚠️ Important: cron cadence is bound by TWO free-tier limits
 
-`vercel.json` currently schedules the cycle **hourly** (`0 */1 * * *`). This
-requires a **Vercel Pro plan** — the free **Hobby plan only allows cron jobs
-to run once per day**, which would NOT satisfy the "publishing must occur
-over time... during the 48-hour evaluation window" requirement well (one
-post per day is too sparse, and Hobby also limits *when* in the day it can
-run).
+`vercel.json` currently schedules the cycle **every 2 hours** (`0 */2 * * *`,
+12 runs/day). This cadence is a deliberate compromise between two separate
+constraints, not just a round number:
 
-Before submitting, confirm your Vercel plan supports the schedule you need.
-Options if stuck on Hobby:
-- Upgrade to Pro for the hackathon window, or
-- Use an external free cron trigger (e.g. cron-job.org, GitHub Actions
-  scheduled workflow) to hit `/api/cron/cycle` on a tighter schedule instead
-  of relying on Vercel's built-in cron. If using an external trigger, remove
-  or ignore the `crons` block in `vercel.json` and instead point the
-  external service at `https://<your-deploy>.vercel.app/api/cron/cycle`,
-  with an `Authorization: Bearer <CRON_SECRET>` header.
+**1. Vercel Cron plan limits.** Any schedule faster than once/day **fails
+deployment outright** on the free Hobby plan (confirmed — it's not a soft
+throttle, the deploy errors). Running every 2 hours requires **Vercel Pro**
+(a 14-day free trial with $20 credit comfortably covers a 48-hour hackathon
+window) — or use the GitHub Actions workflow instead (see `DEPLOY.md`
+step 5), which isn't subject to this limit.
 
-This is a known constraint — flagging it here rather than assuming it away.
-**Not yet resolved as of this writing.**
+**2. Gemini API free-tier quota.** Each cycle can make up to ~10-12 Gemini
+calls in the worst case (one judge call per candidate topic — see
+`CANDIDATE_LIMIT` in `discovery.js` — plus a memory check and a writer
+call). Google no longer publishes one fixed daily-request number; it's
+project-specific and shown live in [AI Studio](https://aistudio.google.com).
+Third-party trackers report free-tier Flash models somewhere in the
+**~250 to ~1,500 requests/day** range depending on when you read them, so
+**every-2-hours (12 cycles × ~12 calls worst case ≈ 144 calls/day)** is
+sized to stay comfortably under even the more conservative end of that
+range with headroom. **Check your own project's live quota in AI Studio
+and tighten or loosen the schedule accordingly** — don't take the 250–1,500
+figures as guaranteed.
+
+Also note: as of April 2026, **Gemini 2.5 Pro requires billing** — the free
+tier only covers Flash/Flash-Lite. Both `GEMINI_MODEL_JUDGE` and
+`GEMINI_MODEL_WRITER` default to `gemini-2.5-flash` for this reason (see
+`.env.example`). If you enable billing, you can point the writer at a
+Pro-tier model for better prose via the env var.
+
+A related throttle, `GEMINI_JUDGE_DELAY_MS` (default 4500ms), spaces out
+judge calls *within* a single cycle so a burst of candidates doesn't trip
+the free tier's requests-per-minute cap either — Google doesn't publish a
+stable RPM number anymore, so this default is a conservative guess, not a
+guarantee. Adjust it (or `CANDIDATE_LIMIT`) if you're seeing 429 errors in
+the logs, or loosen both if your project's actual AI Studio quota has more
+room than assumed here.
+
+This is a known, actively-managed constraint, not something quietly
+assumed away — flagging the reasoning here so you can retune it against
+your own live numbers rather than trusting a hardcoded guess.
 
 ## API
 

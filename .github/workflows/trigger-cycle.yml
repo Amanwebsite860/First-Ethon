@@ -16,9 +16,15 @@ name: Trigger autonomous cycle
 
 on:
   schedule:
-    # Every 30 minutes. Adjust to taste — tighter isn't necessarily better,
-    # since editorialJudge + memory checks may reject most cycles anyway.
-    - cron: '*/30 * * * *'
+    # Every 2 hours (12 runs/day). Chosen to fit within a conservative
+    # budget of Gemini's free-tier daily request quota — each cycle can
+    # make up to ~12 Gemini calls worst case (see CANDIDATE_LIMIT in
+    # discovery.js and the judge-call throttle in scheduler/cycle.js), and
+    # Google no longer publishes one fixed RPD number (it's project-specific,
+    # shown in AI Studio). This cadence assumes a conservative floor; check
+    # your own project's live quota in AI Studio and adjust if you have
+    # more headroom, or tighten it if you're hitting 429s.
+    - cron: '0 */2 * * *'
   # Lets you manually trigger a run from the Actions tab, e.g. to smoke-test
   # the setup without waiting for the schedule.
   workflow_dispatch: {}

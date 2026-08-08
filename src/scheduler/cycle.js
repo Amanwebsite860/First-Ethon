@@ -27,6 +27,21 @@ import { writePost } from '../services/writer.js';
 import { getPosts, addPost, agentExists } from '../storage/kvRepository.js';
 import logger from '../utils/logger.js';
 
+// Gemini's free tier RPM cap is tight (single digits to low teens,
+// depending on model/project — Google no longer publishes a fixed table,
+// see README). A single cycle can call judgeTopic for up to
+// CANDIDATE_LIMIT topics sequentially (see discovery.js) plus a memory
+// check and a writer call for whichever one passes — a burst that alone
+// can exceed a low RPM cap if fired back-to-back. This small delay spreads
+// judge calls out so one cycle doesn't trip a 429 partway through.
+// Default: 4.5s between calls ≈ ~13 requests/minute, safely under typical
+// free-tier RPM ceilings without needing exact numbers.
+const JUDGE_CALL_DELAY_MS = Number(process.env.GEMINI_JUDGE_DELAY_MS) || 4500;
+
+function sleep(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
 /**
  * Run one full discover -> judge -> memory -> write -> persist cycle for
  * a single agent. Returns the new post if one was published, else null.
@@ -50,7 +65,11 @@ export async function runCycleForAgent(agentId) {
 
   const pastPosts = await getPosts(agentId);
 
-  for (const topic of topics) {
+  for (const [index, topic] of topics.entries()) {
+    if (index > 0) {
+      await sleep(JUDGE_CALL_DELAY_MS);
+    }
+
     const judgment = await judgeTopic(topic);
     if (!judgment.shouldPublish) {
       continue;

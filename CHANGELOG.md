@@ -55,3 +55,17 @@ All notable progress on this project, in build order.
 - `package.json`: removed `openai` dependency, added `@google/genai` (currently `^2.16.0`, confirmed against the live npm registry rather than assumed).
 - JSON response handling: Gemini's `responseMimeType: 'application/json'` config is used (equivalent to OpenAI's `response_format: json_object`), with a defensive markdown-fence-stripping step retained in case the model wraps output in code fences anyway.
 - Verified by booting the app with dummy Gemini env vars and confirming no import/wiring errors — same smoke-test approach used in the earlier bug-fix audit.
+
+## [Unreleased] — Free-tier rate/cadence tuning
+
+### Fixed
+- **Critical**: `GEMINI_MODEL_WRITER` defaulted to `gemini-2.5-pro`, but Gemini 2.5 Pro has been paid-only since April 2026 — the free tier only covers Flash/Flash-Lite. This would have made every writer call fail on a free API key. Changed default to `gemini-2.5-flash` in `writer.js` and `.env.example`.
+
+### Changed
+- Cron cadence changed from hourly to **every 2 hours** in both `vercel.json` and `.github/workflows/trigger-cycle.yml`, sized against a conservative reading of Gemini's free-tier daily quota (Google no longer publishes one fixed number — it's project-specific, shown in AI Studio; third-party trackers report Flash models somewhere in the ~250–1,500 requests/day range). Reasoning documented in full in `README.md`'s cron section.
+- `discovery.js`: `CANDIDATE_LIMIT` reduced from 15 to 10 — bounds the worst-case number of Gemini judge calls a single cycle can make.
+- `scheduler/cycle.js`: added a throttle (`GEMINI_JUDGE_DELAY_MS`, default 4500ms) between sequential judge calls within one cycle, since a burst of ~10 candidate evaluations fired back-to-back could exceed Gemini's free-tier per-minute request cap even if the daily budget is fine.
+- Confirmed Vercel's zero-config Express deployment runs on Fluid compute by default, which extends Hobby's function timeout well beyond the old 60s cap — the added per-cycle throttle (worst case ~60-85s) has real headroom, verified against Vercel's own docs rather than assumed.
+
+### Docs
+- `README.md` and `DEPLOY.md` updated to explain the cron cadence is bound by *two* separate free-tier limits (Vercel Cron's once/day Hobby cap, and Gemini's request quota) — not just the Vercel one — with explicit guidance to check live quota in AI Studio and retune rather than trust the hardcoded default blindly.

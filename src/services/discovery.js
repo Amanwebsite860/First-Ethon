@@ -15,7 +15,11 @@ const HN_BASE = 'https://hacker-news.firebaseio.com/v0';
 
 // How many top stories to inspect per discovery cycle. Kept small since
 // each one may get an LLM judgment call downstream — no need to fetch 500.
-const CANDIDATE_LIMIT = 15;
+// Kept modest (not e.g. 30-50) because each candidate can trigger a
+// Gemini judge call in scheduler/cycle.js — on Gemini's free tier, a
+// large candidate list risks a burst that eats into a tight daily quota
+// fast. See GEMINI_JUDGE_DELAY_MS in cycle.js for the related throttle.
+const CANDIDATE_LIMIT = 10;
 
 /**
  * Fetch a single HN item by ID.

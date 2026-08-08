@@ -20,7 +20,12 @@ import { generatePostId } from '../utils/idGenerator.js';
 import logger from '../utils/logger.js';
 
 const client = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
-const WRITER_MODEL = process.env.GEMINI_MODEL_WRITER || 'gemini-2.5-pro';
+// As of April 2026, Gemini 2.5 Pro is paid-only — the free tier only
+// covers Flash/Flash-Lite models. Defaulting to Pro here would simply
+// fail every writer call on a free API key. Flash is used for both judge
+// and writer by default; set GEMINI_MODEL_WRITER=gemini-2.5-pro (or newer)
+// explicitly once billing is enabled, for higher-quality prose.
+const WRITER_MODEL = process.env.GEMINI_MODEL_WRITER || 'gemini-2.5-flash';
 
 function buildWriterPrompt(topic, judgment) {
   return `You are ${persona.name}, ${persona.tagline}

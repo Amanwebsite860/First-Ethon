@@ -74,15 +74,23 @@ a reason not to.
 **This decision must be made before relying on the deployment for the
 48-hour evaluation window.**
 
+`vercel.json` currently schedules the cycle **every 2 hours** (12 runs/day)
+— sized to fit within a conservative reading of Gemini's free-tier daily
+request quota (see the note in `README.md` for the exact reasoning). Adjust
+the schedule if your actual quota, checked live in
+[AI Studio](https://aistudio.google.com), gives you more or less headroom
+than assumed.
+
 - **If you have (or will get) Vercel Pro**: no action needed —
-  `vercel.json`'s hourly schedule works as-is. Skip to step 6. A **14-day
-  free trial with $20 in credits** is available, which comfortably covers
-  a 48-hour hackathon window at zero cost — the simplest path if you don't
-  mind putting a card on file.
+  `vercel.json`'s every-2-hours schedule works as-is. Skip to step 6. A
+  **14-day free trial with $20 in credits** is available, which comfortably
+  covers a 48-hour hackathon window at zero cost — the simplest path if you
+  don't mind putting a card on file.
 - **If you're staying on Vercel Hobby (free)**: confirmed — Hobby doesn't
   just throttle faster schedules, it **refuses to deploy** any cron
   expression that would run more than once/day (deployment fails outright
-  with an error). Choose one:
+  with an error). This applies regardless of how conservative the interval
+  is — even every-2-hours needs Pro (or the workaround below). Choose one:
   - **Start the Pro free trial** for the hackathon window (simplest, see
     above).
   - **Use an external free scheduler** instead:
@@ -94,15 +102,17 @@ a reason not to.
        - **cron-job.org** — free web dashboard, no code. Add a job
          targeting `https://<your-deploy>.vercel.app/api/cron/cycle`,
          method `GET`, header `Authorization: Bearer <CRON_SECRET>`,
-         interval 30–60 minutes.
+         interval every 2 hours (matching the reasoning above — tighten
+         or loosen based on your actual AI Studio quota).
        - **GitHub Actions** — a ready-to-use workflow is already in this
-         repo at `.github/workflows/trigger-cycle.yml`. To enable it:
+         repo at `.github/workflows/trigger-cycle.yml`, already set to the
+         same every-2-hours cadence. To enable it:
          1. In your GitHub repo, go to **Settings → Secrets and variables
             → Actions → New repository secret** and add:
             - `AGENT_BASE_URL` — e.g. `https://your-deploy.vercel.app`
               (no trailing slash)
             - `CRON_SECRET` — the same value you set in Vercel's env vars
-         2. That's it — the workflow runs every 30 minutes automatically
+         2. That's it — the workflow runs every 2 hours automatically
             once merged to the default branch. You can also trigger it
             manually from the repo's **Actions** tab (`workflow_dispatch`)
             to smoke-test the setup immediately rather than waiting for
