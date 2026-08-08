@@ -77,3 +77,30 @@ export async function agentExists(agentId) {
   const meta = await getAgent(agentId);
   return meta !== null;
 }
+
+// --- Current-agent pointer -------------------------------------------------
+// Vercel KV doesn't give us a simple "list all agent keys" primitive here,
+// and this hackathon's scope only ever has one live agent per submission
+// (evaluator calls init exactly once). So we track "the current agent" under
+// a fixed key, set at init time, and the cron cycle handler reads it to know
+// which agent to run for. If multi-agent support is ever needed, this is the
+// place to swap in a real index (e.g. a Set of agent IDs).
+
+const CURRENT_AGENT_KEY = 'currentAgentId';
+
+/**
+ * Mark an agent as "the current agent" — called from init.
+ * @param {string} agentId
+ */
+export async function setCurrentAgentId(agentId) {
+  await kv.set(CURRENT_AGENT_KEY, agentId);
+}
+
+/**
+ * Get the current agent's ID, if any has been initialized.
+ * @returns {Promise<string|null>}
+ */
+export async function getCurrentAgentId() {
+  const id = await kv.get(CURRENT_AGENT_KEY);
+  return id ?? null;
+}
