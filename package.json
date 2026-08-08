@@ -6,7 +6,8 @@
   "type": "module",
   "scripts": {
     "dev": "node src/index.js",
-    "start": "node src/index.js"
+    "start": "node src/index.js",
+    "test:storage": "node scripts/test-storage.js"
   },
   "engines": {
     "node": ">=18.0.0"
@@ -15,6 +16,9 @@
     "@vercel/kv": "^1.0.1",
     "express": "^4.19.2",
     "openai": "^4.52.0"
+  },
+  "devDependencies": {
+    "dotenv": "^16.4.5"
   },
   "license": "MIT"
 }
