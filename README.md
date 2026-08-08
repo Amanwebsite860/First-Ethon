@@ -107,18 +107,27 @@ effect.
 **⚠️ Before you rely on the cron schedule, read the note below** — it
 affects whether posts actually publish "over time" during evaluation.
 
-## ⚠️ Important: cron cadence is bound by TWO free-tier limits
+## ⚠️ Important: this project is configured for Vercel Hobby + GitHub Actions
 
-`vercel.json` currently schedules the cycle **every 2 hours** (`0 */2 * * *`,
-12 runs/day). This cadence is a deliberate compromise between two separate
-constraints, not just a round number:
+The real publishing cadence comes from **`.github/workflows/trigger-cycle.yml`**
+(every 2 hours, 12 runs/day), **not** from Vercel's own cron. `vercel.json`
+is set to a harmless once-daily schedule (`"0 0 * * *"`) — the minimum
+Vercel Hobby allows — as a backup trigger, since Hobby **refuses to deploy
+outright** (not just throttle) any cron expression faster than once/day.
 
-**1. Vercel Cron plan limits.** Any schedule faster than once/day **fails
-deployment outright** on the free Hobby plan (confirmed — it's not a soft
-throttle, the deploy errors). Running every 2 hours requires **Vercel Pro**
-(a 14-day free trial with $20 credit comfortably covers a 48-hour hackathon
-window) — or use the GitHub Actions workflow instead (see `DEPLOY.md`
-step 5), which isn't subject to this limit.
+If you'd rather use Vercel's own cron directly (e.g. on a Pro plan or trial),
+change `vercel.json`'s schedule back to something like `"0 */2 * * *"` and
+you can stop relying on the GitHub Actions workflow — but as configured
+right now, **GitHub Actions is the trigger doing the real work**. Setup
+steps for the two repo secrets it needs (`AGENT_BASE_URL`, `CRON_SECRET`)
+are in `DEPLOY.md` step 5.
+
+Two separate constraints shaped the every-2-hours number specifically —
+not just Vercel's plan limit, but also Gemini's own quota:
+
+**1. Vercel Cron plan limits.** Confirmed — Hobby fails deployment outright
+on any cron faster than once/day, which is why the real cadence had to move
+to GitHub Actions instead of `vercel.json`.
 
 **2. Gemini API free-tier quota.** Each cycle can make up to ~10-12 Gemini
 calls in the worst case (one judge call per candidate topic — see
@@ -130,8 +139,8 @@ Third-party trackers report free-tier Flash models somewhere in the
 **every-2-hours (12 cycles × ~12 calls worst case ≈ 144 calls/day)** is
 sized to stay comfortably under even the more conservative end of that
 range with headroom. **Check your own project's live quota in AI Studio
-and tighten or loosen the schedule accordingly** — don't take the 250–1,500
-figures as guaranteed.
+and tighten or loosen the GitHub Actions schedule accordingly** — don't
+take the 250–1,500 figures as guaranteed.
 
 Also note: as of April 2026, **Gemini 2.5 Pro requires billing** — the free
 tier only covers Flash/Flash-Lite. Both `GEMINI_MODEL_JUDGE` and

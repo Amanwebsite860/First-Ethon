@@ -69,3 +69,10 @@ All notable progress on this project, in build order.
 
 ### Docs
 - `README.md` and `DEPLOY.md` updated to explain the cron cadence is bound by *two* separate free-tier limits (Vercel Cron's once/day Hobby cap, and Gemini's request quota) — not just the Vercel one — with explicit guidance to check live quota in AI Studio and retune rather than trust the hardcoded default blindly.
+
+## [Unreleased] — Confirmed: Vercel Hobby + GitHub Actions
+
+### Changed
+- `vercel.json` cron changed from every-2-hours to **once-daily** (`"0 0 * * *"`) — the minimum Vercel Hobby allows — now serving as a harmless backup trigger rather than the real cadence.
+- `.github/workflows/trigger-cycle.yml` (every 2 hours) is now the actual publishing trigger, confirmed as the chosen path (Hobby plan, not upgrading to Pro).
+- `README.md` and `DEPLOY.md` rewritten to describe this as the configured setup directly, rather than as one branch of an if/else decision tree — removes ambiguity about which schedule is actually live.
