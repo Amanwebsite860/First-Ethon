@@ -32,11 +32,13 @@ function normalize(str) {
 
 /**
  * Cheap heuristic check: does this topic's URL or title closely match
- * something already published?
+ * something already published? Exported so scoring.js can reuse it as a
+ * pre-filter before candidates ever reach the (paid-quota) judge step,
+ * rather than duplicating this logic.
  * @param {{title: string, url: string}} topic
  * @param {Array<{text: string, sources: string[]}>} pastPosts
  */
-function isObviousDuplicate(topic, pastPosts) {
+export function isObviousDuplicate(topic, pastPosts) {
   const normTitle = normalize(topic.title);
   const normUrl = normalize(topic.url);
 

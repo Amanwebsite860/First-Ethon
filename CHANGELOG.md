@@ -69,3 +69,50 @@ All notable progress on this project, in build order.
 
 ### Docs
 - `README.md` and `DEPLOY.md` updated to explain the cron cadence is bound by *two* separate free-tier limits (Vercel Cron's once/day Hobby cap, and Gemini's request quota) — not just the Vercel one — with explicit guidance to check live quota in AI Studio and retune rather than trust the hardcoded default blindly.
+
+## [Unreleased] — Confirmed: Vercel Hobby + GitHub Actions
+
+### Changed
+- `vercel.json` cron changed from every-2-hours to **once-daily** (`"0 0 * * *"`) — the minimum Vercel Hobby allows — now serving as a harmless backup trigger rather than the real cadence.
+- `.github/workflows/trigger-cycle.yml` (every 2 hours) is now the actual publishing trigger, confirmed as the chosen path (Hobby plan, not upgrading to Pro).
+- `README.md` and `DEPLOY.md` rewritten to describe this as the configured setup directly, rather than as one branch of an if/else decision tree — removes ambiguity about which schedule is actually live.
+
+## [Unreleased] — Discovery, scoring, judge, and writer overhaul
+
+Addresses reviewer feedback: single-source discovery was the biggest weakness in the content pipeline (a good story ranked #30-100 on HN would simply never be seen), the judge's output was too thin to give the writer real editorial direction, and there was no explicit anti-fabrication guardrail for an autonomous news persona.
+
+### Added
+- **Multi-source discovery** (`src/services/sources/`): `hackerNews.js` (existing HN logic, extracted) + `rssFeeds.js` (new) — four RSS/Atom feeds covering research papers (arXiv cs.CR) and AI security journalism (The Hacker News, Krebs on Security, Schneier on Security). No API keys required. Each source fails independently and soft — one feed going down doesn't affect the others or crash discovery. `discovery.js` rewritten as a thin aggregator that merges all sources and dedupes by normalized URL.
+- **Heuristic scoring/ranking** (`src/services/scoring.js`, new): non-LLM candidate scoring — `sourceQuality` (per-source weight + HN-points bonus), `recency` (bucketed by age), `securityRelevance` (keyword match against a new `persona.editorialStance.securityKeywords` list), `technicalDepth` (keyword match + research-source bonus). Also hard-filters candidates matching a new `persona.editorialStance.avoidKeywords` list (funding announcements, "best AI tools" listicles, etc.) and obvious duplicates of past posts (reuses `memory.js`'s heuristic via a new named export), before any of it reaches the judge. Caps survivors to `JUDGE_TOP_N` (default 8, env-configurable) — this is what actually bounds Gemini call volume now that discovery can surface a larger multi-source pool, directly addressing the "reduce unnecessary Gemini calls" goal.
+- **Richer judge output** (`editorialJudge.js`): schema expanded from `{shouldPublish, whySelected, whyRelevantNow, rejectionReason}` to also include `relevanceScore`, `noveltyScore`, `sourceQualityScore`, `securityImportance` (all 0-10, clamped) and — most importantly — `angle`: the specific editorial point of view the writer should take, not just a restatement of the topic. The judge prompt also now receives `scoring.js`'s heuristic sub-scores as grounding context (explicitly framed as "context only, use your own judgment").
+- **Writer pipeline upgrade** (`writer.js`): now takes the judge's `angle` and a short window of recent post text (`RECENT_CONTEXT_WINDOW = 3`) as input, so the model knows what Kai has said before and can maintain a consistent point of view rather than just reacting to a bare topic. `scheduler/cycle.js` passes `pastPosts` through to the writer for this.
+- **Factuality guardrails** (`writer.js`): explicit prompt instruction not to invent CVEs, numbers, researcher/company names, or technical mechanisms beyond what the title/URL/angle establish. The model also self-reports a `claims` list in its JSON output — logged internally for review, but deliberately **not** persisted into the stored post object, since the `/api/agent/feed` response shape must not deviate from the spec.
+
+### Changed
+- `scheduler/cycle.js`: pipeline is now discover → **score/rank** → judge (throttled, ranked order) → memory → write(angle + context) → persist, replacing the old discover → judge → memory → write.
+- `persona.js`: added `editorialStance.securityKeywords` and `editorialStance.avoidKeywords` — plain keyword lists for the new cheap scoring layer, kept separate from the prose `coversTopics`/`avoidsTopics` used in LLM prompts.
+- `package.json`: added `rss-parser` (`^3.13.0`).
+
+### Verified
+- Boot-tested the full app end-to-end after the rewrite — no import/wiring errors.
+- Since this sandbox's network egress is restricted to package registries (not live internet), `discoverTopics()` was run against blocked network calls specifically to confirm every source (HN + all 4 RSS feeds) fails soft individually and the aggregator still returns a clean empty array rather than crashing — exercises the actual error-handling paths, not just the happy path.
+- `scoring.js` tested directly with synthetic candidates covering avoid-keyword filtering, security-keyword relevance, recency, and source-quality weighting — confirmed correct filtering and ranking order.
+- **Not independently verified**: real output from the live RSS feeds/HN API (blocked in this sandbox) and real Gemini judge/writer responses (no API key available here). Recommend a live smoke test once deployed — see `DEPLOY.md`.
+
+## [Unreleased] — Fixed persona mismatch bug, added homepage UI
+
+### Fixed
+- **Critical bug, previously self-documented in a code comment as intentional**: the evaluator's submitted persona (`POST /api/agent/init`'s `{name, domain}`) was stored but never actually used — every LLM call (`editorialJudge.js`, `writer.js`) statically imported a hardcoded `persona` object from `config/persona.js` ("Kai Renn"), so an agent initialized as "Ada" would still silently write as "Kai Renn." Now fixed properly:
+  - `config/persona.js` rewritten: exports `buildPersona({name, domain})`, which builds the actual active persona from whatever was submitted at init, falling back to the default (Kai Renn / AI Security) for anything not provided. If the submitted domain looks security-related, the project's hand-curated editorial stance/voice/keyword lists are reused (just with the new name/domain substituted in); for a genuinely different domain, a leaner generic template is derived from the domain string itself — documented as an honest scope limitation (two words can't replicate hand-tuned domain expertise) rather than silently pretended away.
+  - `scheduler/cycle.js` now fetches the agent's actual stored meta (`getAgent`) at the start of every cycle, builds the real persona via `buildPersona()`, and threads it through `scoring.js`, `editorialJudge.js`, and `writer.js` as an explicit parameter — replacing the static imports those modules used to have.
+  - `init.js`'s header comment (which literally documented the bug as intentional behavior, with a note flagging it for a future fix) rewritten to describe the corrected behavior.
+
+### Added
+- **Homepage UI** (`public/index.html`, served at `/` via `express.static`): a dashboard showing the active persona's identity, a live auto-refreshing feed, a specification panel (real configured values — cron cadence, discovery sources, models, judge/writer throttle settings — not placeholders), and copy-pasteable `curl` commands for `init`/`feed` pre-filled with the page's actual deployed origin. No build step, single static file with inline CSS/JS. Design grounded in the subject matter (security-research/log-line vernacular: monospace metadata, post rationale rendered as a code comment) rather than a generic template — see the file's own visual choices.
+- `src/routes/ui.js`: new `GET /api/ui/status` — read-only, unauthenticated convenience endpoint that powers the homepage's self-loading behavior (current agent's persona + post count). Explicitly NOT part of the evaluator-facing API contract; `init`/`feed` remain the only required endpoints and their behavior is unchanged.
+- Project credits added to the homepage footer: Aman Raj, Ayush Raj, Hariom Kumar.
+
+### Verified
+- `buildPersona()` tested directly with three cases: the hackathon spec's own example payload (`Ada` / `AI Security` — correctly reuses the full curated security template with the name swapped), an arbitrary unrelated domain (`Nova` / `Climate Tech` — correctly falls back to the generic template, domain-word keyword derivation confirmed), and no override (correctly defaults to Kai Renn / AI Security).
+- Full app boot-tested again after wiring `getAgent`/`buildPersona` through `cycle.js`.
+- Homepage boot-tested end-to-end: confirmed `GET /` returns `200 text/html` with the real page content (credits, spec grid, try-it commands all present in the served HTML), and confirmed `/api/ui/status` fails gracefully (caught, clean JSON 500) against invalid storage credentials rather than crashing — same pattern as every other storage-dependent route.
