@@ -35,21 +35,12 @@ import { generatePostId } from '../utils/idGenerator.js';
 import logger from '../utils/logger.js';
 
 const client = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
-<<<<<<< HEAD
 // No hardcoded fallback here on purpose (see editorialJudge.js for the
 // full reasoning) — a silently-applied default model string is what
 // caused production to keep calling a retired model after env vars were
 // changed in the Vercel dashboard but the deployment wasn't picking them
 // up. GEMINI_MODEL_WRITER is enforced as required in checkEnv.js.
 const WRITER_MODEL = process.env.GEMINI_MODEL_WRITER;
-=======
-// As of April 2026, Gemini 2.5 Pro is paid-only — the free tier only
-// covers Flash/Flash-Lite. Defaulting to Pro here would simply fail
-// every writer call on a free API key. Flash is used for both judge and
-// writer by default; set GEMINI_MODEL_WRITER=gemini-2.5-pro (or newer)
-// explicitly once billing is enabled, for higher-quality prose.
-const WRITER_MODEL = process.env.GEMINI_MODEL_WRITER || 'gemini-2.5-flash';
->>>>>>> ba5ccf05fcce6b7cc38d3cc040a3bbc9a1feeb2d
 
 // How many recent posts to summarize into the writer's prompt as "what
 // has Kai already said" context. Kept small — this is for light

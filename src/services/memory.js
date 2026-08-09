@@ -20,16 +20,12 @@ import { GoogleGenAI } from '@google/genai';
 import logger from '../utils/logger.js';
 
 const client = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
-<<<<<<< HEAD
 // Same fix as editorialJudge.js/writer.js — no hardcoded fallback. This
 // module was actually missed in the first pass at this fix (it's a third,
 // easy-to-overlook call site using the same env var), which is exactly
 // the kind of gap a "find every instance" grep should catch rather than
 // patching call sites one at a time as they're noticed.
 const JUDGE_MODEL = process.env.GEMINI_MODEL_JUDGE;
-=======
-const JUDGE_MODEL = process.env.GEMINI_MODEL_JUDGE || 'gemini-2.5-flash';
->>>>>>> ba5ccf05fcce6b7cc38d3cc040a3bbc9a1feeb2d
 
 // How many of the most recent posts to check the new topic against via LLM.
 // Keeps prompt size and cost bounded even as the feed grows over 48 hours.

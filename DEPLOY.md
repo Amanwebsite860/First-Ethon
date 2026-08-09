@@ -58,13 +58,8 @@ Go to **Settings → Environment Variables**. Confirm/add:
 | Variable | Value | Notes |
 |---|---|---|
 | `GEMINI_API_KEY` | your key from [Google AI Studio](https://aistudio.google.com/apikey) | required |
-<<<<<<< HEAD
 | `GEMINI_MODEL_JUDGE` | `gemini-3.5-flash-lite` | **required** — no code fallback (see note below) |
 | `GEMINI_MODEL_WRITER` | `gemini-3.5-flash-lite` | **required** — no code fallback (see note below) |
-=======
-| `GEMINI_MODEL_JUDGE` | `gemini-2.5-flash` | optional, this is the default |
-| `GEMINI_MODEL_WRITER` | `gemini-2.5-pro` | optional, this is the default |
->>>>>>> ba5ccf05fcce6b7cc38d3cc040a3bbc9a1feeb2d
 | `CRON_SECRET` | a random string, e.g. output of `openssl rand -hex 32` | required — protects `/api/cron/cycle` |
 | `KV_REST_API_URL` | from step 3 (may already be set) | required |
 | `KV_REST_API_TOKEN` | from step 3 (may already be set) | required |
@@ -74,7 +69,6 @@ Go to **Settings → Environment Variables**. Confirm/add:
 Apply to all environments (Production/Preview/Development) unless you have
 a reason not to.
 
-<<<<<<< HEAD
 **Important — these two are required, not optional.** `GEMINI_MODEL_JUDGE`
 and `GEMINI_MODEL_WRITER` have no hardcoded fallback in the code; the app
 fails loudly at boot if either is missing (see `checkEnv.js`). This is
@@ -85,8 +79,6 @@ verify the model name is available to your specific API key/project in
 [AI Studio](https://aistudio.google.com)** before relying on it — being
 required doesn't mean the string is guaranteed to be a real, live model.
 
-=======
->>>>>>> ba5ccf05fcce6b7cc38d3cc040a3bbc9a1feeb2d
 ## 5. Set up GitHub Actions cron (Hobby plan setup)
 
 This project is configured for **Vercel Hobby + GitHub Actions** — the

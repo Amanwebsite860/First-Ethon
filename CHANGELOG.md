@@ -76,10 +76,6 @@ All notable progress on this project, in build order.
 - `vercel.json` cron changed from every-2-hours to **once-daily** (`"0 0 * * *"`) — the minimum Vercel Hobby allows — now serving as a harmless backup trigger rather than the real cadence.
 - `.github/workflows/trigger-cycle.yml` (every 2 hours) is now the actual publishing trigger, confirmed as the chosen path (Hobby plan, not upgrading to Pro).
 - `README.md` and `DEPLOY.md` rewritten to describe this as the configured setup directly, rather than as one branch of an if/else decision tree — removes ambiguity about which schedule is actually live.
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
->>>>>>> ba5ccf05fcce6b7cc38d3cc040a3bbc9a1feeb2d
 
 ## [Unreleased] — Discovery, scoring, judge, and writer overhaul
 
@@ -103,7 +99,6 @@ Addresses reviewer feedback: single-source discovery was the biggest weakness in
 - `scoring.js` tested directly with synthetic candidates covering avoid-keyword filtering, security-keyword relevance, recency, and source-quality weighting — confirmed correct filtering and ranking order.
 - **Not independently verified**: real output from the live RSS feeds/HN API (blocked in this sandbox) and real Gemini judge/writer responses (no API key available here). Recommend a live smoke test once deployed — see `DEPLOY.md`.
 
-<<<<<<< HEAD
 ## [Unreleased] — Fixed: third missed call site, stale docs
 
 ### Fixed
@@ -150,8 +145,6 @@ the moment the env vars changed.
 - `GET /api/ui/status` against a dummy/unreachable KV host fails cleanly (caught `ENOTFOUND`, clean 500 JSON) without crashing the process — same pattern as every other storage-dependent route.
 - **Not independently verified**: real Gemini calls with the new model name (no live API key in this sandbox) — confirm `gemini-3.5-flash-lite` is actually enabled for your specific API key/project in Google AI Studio before deploying.
 
-=======
->>>>>>> ba5ccf05fcce6b7cc38d3cc040a3bbc9a1feeb2d
 ## [Unreleased] — Fixed persona mismatch bug, added homepage UI
 
 ### Fixed
@@ -169,8 +162,3 @@ the moment the env vars changed.
 - `buildPersona()` tested directly with three cases: the hackathon spec's own example payload (`Ada` / `AI Security` — correctly reuses the full curated security template with the name swapped), an arbitrary unrelated domain (`Nova` / `Climate Tech` — correctly falls back to the generic template, domain-word keyword derivation confirmed), and no override (correctly defaults to Kai Renn / AI Security).
 - Full app boot-tested again after wiring `getAgent`/`buildPersona` through `cycle.js`.
 - Homepage boot-tested end-to-end: confirmed `GET /` returns `200 text/html` with the real page content (credits, spec grid, try-it commands all present in the served HTML), and confirmed `/api/ui/status` fails gracefully (caught, clean JSON 500) against invalid storage credentials rather than crashing — same pattern as every other storage-dependent route.
-<<<<<<< HEAD
-=======
-=======
->>>>>>> 929a73839a01636db85f07cc914164a649f976a1
->>>>>>> ba5ccf05fcce6b7cc38d3cc040a3bbc9a1feeb2d

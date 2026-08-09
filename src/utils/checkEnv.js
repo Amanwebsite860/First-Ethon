@@ -7,7 +7,6 @@
 
 import logger from './logger.js';
 
-<<<<<<< HEAD
 const REQUIRED_VARS = [
   'GEMINI_API_KEY',
   // GEMINI_MODEL_JUDGE / GEMINI_MODEL_WRITER used to have hardcoded
@@ -22,9 +21,6 @@ const REQUIRED_VARS = [
   'KV_REST_API_URL',
   'KV_REST_API_TOKEN',
 ];
-=======
-const REQUIRED_VARS = ['GEMINI_API_KEY', 'KV_REST_API_URL', 'KV_REST_API_TOKEN'];
->>>>>>> ba5ccf05fcce6b7cc38d3cc040a3bbc9a1feeb2d
 
 // Not required to boot, but worth warning about since their absence
 // silently changes behavior (e.g. cron endpoint becomes unauthenticated).

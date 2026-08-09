@@ -251,7 +251,6 @@
   .spec-val.amber { color: var(--amber); }
   .spec-val.sage { color: var(--sage); }
 
-<<<<<<< HEAD
   .spec-note {
     font-family: var(--mono);
     font-size: 11.5px;
@@ -259,13 +258,10 @@
     margin: -8px 0 16px;
   }
 
-=======
->>>>>>> ba5ccf05fcce6b7cc38d3cc040a3bbc9a1feeb2d
   @media (max-width: 560px) {
     .spec-grid { grid-template-columns: 1fr; }
   }
 
-<<<<<<< HEAD
   /* ---------- Shell tabs ---------- */
 
   .shell-tabs {
@@ -299,8 +295,6 @@
     margin: -8px 0 16px;
   }
 
-=======
->>>>>>> ba5ccf05fcce6b7cc38d3cc040a3bbc9a1feeb2d
   /* ---------- Try it ---------- */
 
   .cmd-block {
@@ -393,10 +387,7 @@
 
     <section id="specsSection">
       <p class="section-label">Specification</p>
-<<<<<<< HEAD
       <p class="spec-note">Read live from the running deployment's own config — not hardcoded into this page.</p>
-=======
->>>>>>> ba5ccf05fcce6b7cc38d3cc040a3bbc9a1feeb2d
       <div class="spec-grid">
         <div class="spec-cell">
           <div class="spec-key">Publish cadence (primary)</div>
@@ -416,7 +407,6 @@
         </div>
         <div class="spec-cell">
           <div class="spec-key">Judge model</div>
-<<<<<<< HEAD
           <div class="spec-val sage" id="specJudgeModel">—</div>
         </div>
         <div class="spec-cell">
@@ -426,17 +416,6 @@
         <div class="spec-cell">
           <div class="spec-key">Candidates judged / cycle</div>
           <div class="spec-val" id="specJudgeTopN">— (after heuristic scoring)</div>
-=======
-          <div class="spec-val sage">gemini-2.5-flash</div>
-        </div>
-        <div class="spec-cell">
-          <div class="spec-key">Writer model</div>
-          <div class="spec-val sage">gemini-2.5-flash</div>
-        </div>
-        <div class="spec-cell">
-          <div class="spec-key">Candidates judged / cycle</div>
-          <div class="spec-val">Top 8 (after heuristic scoring)</div>
->>>>>>> ba5ccf05fcce6b7cc38d3cc040a3bbc9a1feeb2d
         </div>
         <div class="spec-cell">
           <div class="spec-key">Posts published / cycle</div>
@@ -444,11 +423,7 @@
         </div>
         <div class="spec-cell">
           <div class="spec-key">Judge-call throttle</div>
-<<<<<<< HEAD
           <div class="spec-val" id="specJudgeDelay">—</div>
-=======
-          <div class="spec-val">4.5s between calls (~13 req/min)</div>
->>>>>>> ba5ccf05fcce6b7cc38d3cc040a3bbc9a1feeb2d
         </div>
         <div class="spec-cell">
           <div class="spec-key">Storage</div>
@@ -460,15 +435,12 @@
     <section id="trySection">
       <p class="section-label">Try the API</p>
 
-<<<<<<< HEAD
       <div class="shell-tabs" role="tablist" aria-label="Shell">
         <button class="shell-tab active" data-shell="curl" role="tab" aria-selected="true">curl</button>
         <button class="shell-tab" data-shell="powershell" role="tab" aria-selected="false">PowerShell</button>
       </div>
       <p class="shell-note" id="shellNote">macOS / Linux / WSL. The evaluator's own harness calls the API directly (Python, Node, or similar) — these commands are just for you to sanity-check the deployment by hand.</p>
 
-=======
->>>>>>> ba5ccf05fcce6b7cc38d3cc040a3bbc9a1feeb2d
       <div class="cmd-block">
         <div class="cmd-label">Initialize an agent (POST)</div>
         <pre id="cmdInit">curl -X POST "…"/api/agent/init -H "Content-Type: application/json" -d '{"persona":{"name":"Ada","domain":"AI Security"}}'</pre>
@@ -540,7 +512,6 @@
     feedEl.innerHTML = posts.map(renderPost).join('');
   }
 
-<<<<<<< HEAD
   let currentShell = 'curl';
 
   function commandsFor(shell, agentId) {
@@ -566,19 +537,11 @@
     const cmds = commandsFor(currentShell, agentId);
     el('cmdInit').textContent = cmds.init;
     el('cmdFeed').textContent = cmds.feed;
-=======
-  function setCommands(agentId) {
-    el('cmdInit').textContent =
-      `curl -X POST "${origin}/api/agent/init" \\\n  -H "Content-Type: application/json" \\\n  -d '{"persona":{"name":"Ada","domain":"AI Security"}}'`;
-    el('cmdFeed').textContent =
-      `curl "${origin}/api/agent/feed?agentId=${agentId || 'YOUR_AGENT_ID'}"`;
->>>>>>> ba5ccf05fcce6b7cc38d3cc040a3bbc9a1feeb2d
     el('rawFeedLink').href = agentId
       ? `/api/agent/feed?agentId=${encodeURIComponent(agentId)}`
       : '/api/agent/feed';
   }
 
-<<<<<<< HEAD
   function setSpecs(config) {
     if (!config) return;
     el('specJudgeModel').textContent = config.judgeModel || 'not configured';
@@ -588,18 +551,13 @@
     el('specJudgeDelay').textContent = `${(config.judgeDelayMs / 1000).toFixed(1)}s between calls (~${perMin} req/min)`;
   }
 
-=======
->>>>>>> ba5ccf05fcce6b7cc38d3cc040a3bbc9a1feeb2d
   async function loadStatus() {
     try {
       const res = await fetch('/api/ui/status');
       const data = await res.json();
 
-<<<<<<< HEAD
       setSpecs(data.config);
 
-=======
->>>>>>> ba5ccf05fcce6b7cc38d3cc040a3bbc9a1feeb2d
       if (!data.initialized) {
         el('statusDot').classList.remove('live');
         el('statusText').textContent = 'not initialized — waiting for POST /api/agent/init';
@@ -616,10 +574,7 @@
       el('personaName').textContent = data.persona.name;
       el('personaDomain').textContent = data.persona.domain;
       el('personaTagline').textContent = data.persona.tagline;
-<<<<<<< HEAD
       lastAgentId = data.agentId;
-=======
->>>>>>> ba5ccf05fcce6b7cc38d3cc040a3bbc9a1feeb2d
       setCommands(data.agentId);
 
       const feedRes = await fetch(`/api/agent/feed?agentId=${encodeURIComponent(data.agentId)}`);
@@ -632,7 +587,6 @@
     }
   }
 
-<<<<<<< HEAD
   let lastAgentId = null;
 
   document.addEventListener('click', async (e) => {
@@ -662,19 +616,6 @@
         ? 'Windows PowerShell. The evaluator\u2019s own harness calls the API directly (Python, Node, or similar) — this is just for you to sanity-check the deployment by hand.'
         : 'macOS / Linux / WSL. The evaluator\u2019s own harness calls the API directly (Python, Node, or similar) — this is just for you to sanity-check the deployment by hand.';
       setCommands(lastAgentId);
-=======
-  document.addEventListener('click', async (e) => {
-    const btn = e.target.closest('.copy-btn');
-    if (!btn) return;
-    const targetEl = el(btn.dataset.target);
-    try {
-      await navigator.clipboard.writeText(targetEl.textContent);
-      const original = btn.textContent;
-      btn.textContent = 'copied';
-      setTimeout(() => { btn.textContent = original; }, 1400);
-    } catch {
-      /* clipboard API unavailable — silently ignore, text is still selectable */
->>>>>>> ba5ccf05fcce6b7cc38d3cc040a3bbc9a1feeb2d
     }
   });
 
