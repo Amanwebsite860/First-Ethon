@@ -24,6 +24,7 @@ import logger from '../utils/logger.js';
 // How many top-ranked candidates get sent to the (costly) judge step.
 // See GEMINI_JUDGE_DELAY_MS in scheduler/cycle.js for the related
 // per-call throttle within this budget.
+<<<<<<< HEAD
 //
 // This one keeps a numeric default rather than joining the required-vars
 // list (unlike the model vars above) — an unset JUDGE_TOP_N is a mild
@@ -37,6 +38,9 @@ import logger from '../utils/logger.js';
 // project default, so a propagation failure reproduces obviously instead
 // of quietly resembling the old pre-fix behavior.
 const JUDGE_TOP_N = Number(process.env.JUDGE_TOP_N || 3);
+=======
+const JUDGE_TOP_N = Number(process.env.JUDGE_TOP_N) || 8;
+>>>>>>> ba5ccf05fcce6b7cc38d3cc040a3bbc9a1feeb2d
 
 // Per-source static quality weight (0-10). Curated feeds (research,
 // established security journalism) are weighted above a raw HN listing,

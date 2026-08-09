@@ -11,6 +11,7 @@ import { getCurrentAgentId, getAgent, getPosts } from '../storage/kvRepository.j
 import { buildPersona } from '../config/persona.js';
 import logger from '../utils/logger.js';
 
+<<<<<<< HEAD
 // Real, currently-active config values, read live from process.env rather
 // than hardcoded into the homepage HTML. A previous version of this page
 // hardcoded "gemini-2.5-flash" and "Top 8" directly into the markup —
@@ -27,16 +28,26 @@ function buildConfigSnapshot() {
   };
 }
 
+=======
+>>>>>>> ba5ccf05fcce6b7cc38d3cc040a3bbc9a1feeb2d
 export async function uiStatus(req, res) {
   try {
     const agentId = await getCurrentAgentId();
     if (!agentId) {
+<<<<<<< HEAD
       return res.status(200).json({ initialized: false, config: buildConfigSnapshot() });
+=======
+      return res.status(200).json({ initialized: false });
+>>>>>>> ba5ccf05fcce6b7cc38d3cc040a3bbc9a1feeb2d
     }
 
     const agentMeta = await getAgent(agentId);
     if (!agentMeta) {
+<<<<<<< HEAD
       return res.status(200).json({ initialized: false, config: buildConfigSnapshot() });
+=======
+      return res.status(200).json({ initialized: false });
+>>>>>>> ba5ccf05fcce6b7cc38d3cc040a3bbc9a1feeb2d
     }
 
     const persona = buildPersona(agentMeta);
@@ -52,6 +63,7 @@ export async function uiStatus(req, res) {
       },
       createdAt: agentMeta.createdAt,
       postCount: posts.length,
+<<<<<<< HEAD
       config: buildConfigSnapshot(),
     });
   } catch (err) {
@@ -63,6 +75,12 @@ export async function uiStatus(req, res) {
     // the homepage, which looked like "the model isn't configured" even
     // when it plainly was — the config was just never sent down.
     return res.status(500).json({ error: 'Status check failed', config: buildConfigSnapshot() });
+=======
+    });
+  } catch (err) {
+    logger.error('UI status check failed', err);
+    return res.status(500).json({ error: 'Status check failed' });
+>>>>>>> ba5ccf05fcce6b7cc38d3cc040a3bbc9a1feeb2d
   }
 }
 

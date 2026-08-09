@@ -21,6 +21,7 @@ import { GoogleGenAI } from '@google/genai';
 import logger from '../utils/logger.js';
 
 const client = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+<<<<<<< HEAD
 // No hardcoded fallback here on purpose — a silent fallback to a specific
 // model string is exactly what caused a real incident (see CHANGELOG):
 // Vercel env vars weren't actually applied to a deployment, and the app
@@ -28,6 +29,9 @@ const client = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 // GEMINI_MODEL_JUDGE is now enforced as required in checkEnv.js, so by
 // the time this module runs, it's guaranteed to be set.
 const JUDGE_MODEL = process.env.GEMINI_MODEL_JUDGE;
+=======
+const JUDGE_MODEL = process.env.GEMINI_MODEL_JUDGE || 'gemini-2.5-flash';
+>>>>>>> ba5ccf05fcce6b7cc38d3cc040a3bbc9a1feeb2d
 
 function buildJudgePrompt(topic, heuristicScores, persona) {
   const heuristicNote = heuristicScores

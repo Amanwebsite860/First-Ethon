@@ -140,6 +140,11 @@ you can stop relying on the GitHub Actions workflow — but as configured
 right now, **GitHub Actions is the trigger doing the real work**. Setup
 steps for the two repo secrets it needs (`AGENT_BASE_URL`, `CRON_SECRET`)
 are in `DEPLOY.md` step 5.
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+=======
+>>>>>>> ba5ccf05fcce6b7cc38d3cc040a3bbc9a1feeb2d
 
 Two separate constraints shaped the every-2-hours number specifically —
 not just Vercel's plan limit, but also Gemini's own quota:
@@ -147,24 +152,46 @@ not just Vercel's plan limit, but also Gemini's own quota:
 **1. Vercel Cron plan limits.** Confirmed — Hobby fails deployment outright
 on any cron faster than once/day, which is why the real cadence had to move
 to GitHub Actions instead of `vercel.json`.
+<<<<<<< HEAD
+=======
+>>>>>>> 929a73839a01636db85f07cc914164a649f976a1
+
+Two separate constraints shaped the every-2-hours number specifically —
+not just Vercel's plan limit, but also Gemini's own quota:
+
+**1. Vercel Cron plan limits.** Confirmed — Hobby fails deployment outright
+on any cron faster than once/day, which is why the real cadence had to move
+to GitHub Actions instead of `vercel.json`.
+>>>>>>> ba5ccf05fcce6b7cc38d3cc040a3bbc9a1feeb2d
 
 **2. Gemini API free-tier quota.** Discovery now pulls from multiple
 sources (Hacker News + 4 RSS feeds), producing a larger raw candidate pool
 than before — but `scoring.js` filters and ranks that pool with cheap,
+<<<<<<< HEAD
 non-LLM heuristics first, and only the top `JUDGE_TOP_N` (default 3, see
 `.env.example`) ever reach the Gemini judge. So each cycle still makes up
 to ~3-5 Gemini calls in the worst case (one judge call per surviving
+=======
+non-LLM heuristics first, and only the top `JUDGE_TOP_N` (default 8, see
+`.env.example`) ever reach the Gemini judge. So each cycle still makes up
+to ~8-10 Gemini calls in the worst case (one judge call per surviving
+>>>>>>> ba5ccf05fcce6b7cc38d3cc040a3bbc9a1feeb2d
 candidate, plus a memory check and a writer call), not one call per raw
 candidate. Google no longer publishes one fixed daily-request number; it's
 project-specific and shown live in [AI Studio](https://aistudio.google.com).
 Third-party trackers report free-tier Flash models somewhere in the
 **~250 to ~1,500 requests/day** range depending on when you read them, so
+<<<<<<< HEAD
 **every-2-hours (12 cycles × ~5 calls worst case ≈ 60 calls/day)** is
+=======
+**every-2-hours (12 cycles × ~10 calls worst case ≈ 120 calls/day)** is
+>>>>>>> ba5ccf05fcce6b7cc38d3cc040a3bbc9a1feeb2d
 sized to stay comfortably under even the more conservative end of that
 range with headroom. **Check your own project's live quota in AI Studio
 and tighten or loosen the GitHub Actions schedule accordingly** — don't
 take the 250–1,500 figures as guaranteed.
 
+<<<<<<< HEAD
 Also note: `gemini-2.5-flash` was retired for new users, and `gemini-2.5-pro`
 requires billing — the free tier now centers on the Flash-Lite tier of the
 current model generation. `GEMINI_MODEL_JUDGE` and `GEMINI_MODEL_WRITER`
@@ -179,6 +206,13 @@ instead. **Verify whatever model name you set is actually available to
 your specific API key/project in AI Studio before deploying** — the app
 can enforce that the variable is *set*, but not that the model string
 itself is real.
+=======
+Also note: as of April 2026, **Gemini 2.5 Pro requires billing** — the free
+tier only covers Flash/Flash-Lite. Both `GEMINI_MODEL_JUDGE` and
+`GEMINI_MODEL_WRITER` default to `gemini-2.5-flash` for this reason (see
+`.env.example`). If you enable billing, you can point the writer at a
+Pro-tier model for better prose via the env var.
+>>>>>>> ba5ccf05fcce6b7cc38d3cc040a3bbc9a1feeb2d
 
 A related throttle, `GEMINI_JUDGE_DELAY_MS` (default 4500ms), spaces out
 judge calls *within* a single cycle so a burst of candidates doesn't trip
