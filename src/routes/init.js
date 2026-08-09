@@ -6,12 +6,12 @@
 //
 // Per the spec, the request body looks like:
 //   { "persona": { "name": "Ada", "domain": "AI Security" } }
-// but per our architecture, the ACTUAL persona voice/stance is fixed in
-// src/config/persona.js (Kai Renn) — we still accept + store whatever the
-// evaluator sends for the "persona" field, since the spec requires the
-// endpoint to accept it, but our internal agent always writes as Kai Renn.
-// (If Aman wants the submitted persona to actually override the config,
-// that's a one-line change here — flagging it, not deciding it silently.)
+// We store whatever the evaluator sends (falling back to this project's
+// default persona for any field not provided). That stored { name, domain }
+// is the single source of truth for the agent's actual identity — every
+// cron cycle rebuilds the active persona from it via
+// config/persona.js's buildPersona(), so the agent genuinely writes as
+// whatever name/domain was submitted here, not a hardcoded default.
 
 import { generateAgentId } from '../utils/idGenerator.js';
 import { createAgent, setCurrentAgentId } from '../storage/kvRepository.js';

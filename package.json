@@ -13,9 +13,10 @@
     "node": ">=18.0.0"
   },
   "dependencies": {
+    "@google/genai": "^2.16.0",
     "@vercel/kv": "^1.0.1",
     "express": "^4.19.2",
-    "openai": "^4.52.0"
+    "rss-parser": "^3.13.0"
   },
   "devDependencies": {
     "dotenv": "^16.4.5"

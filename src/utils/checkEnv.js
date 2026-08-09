@@ -7,7 +7,20 @@
 
 import logger from './logger.js';
 
-const REQUIRED_VARS = ['OPENAI_API_KEY', 'KV_REST_API_URL', 'KV_REST_API_TOKEN'];
+const REQUIRED_VARS = [
+  'GEMINI_API_KEY',
+  // GEMINI_MODEL_JUDGE / GEMINI_MODEL_WRITER used to have hardcoded
+  // fallbacks (gemini-2.5-flash) so a missing/un-propagated env var
+  // never surfaced as an error — the app just quietly kept calling a
+  // model that had since been retired for new users. Making these
+  // required means a misconfigured deployment fails loudly at boot
+  // instead of silently degrading mid-cycle hours into the evaluation
+  // window.
+  'GEMINI_MODEL_JUDGE',
+  'GEMINI_MODEL_WRITER',
+  'KV_REST_API_URL',
+  'KV_REST_API_TOKEN',
+];
 
 // Not required to boot, but worth warning about since their absence
 // silently changes behavior (e.g. cron endpoint becomes unauthenticated).

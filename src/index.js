@@ -10,12 +10,17 @@
 
 // Load .env in local dev (no-op on Vercel, which injects env vars directly).
 import 'dotenv/config';
+import path from 'path';
+import { fileURLToPath } from 'url';
 import express from 'express';
 import initAgent from './routes/init.js';
 import getFeed from './routes/feed.js';
 import cronCycle from './routes/cron.js';
+import uiStatus from './routes/ui.js';
 import checkEnv from './utils/checkEnv.js';
 import logger from './utils/logger.js';
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 // Fail fast with a clear message if required config is missing, rather
 // than surfacing a confusing error deep inside an LLM/storage call later.
@@ -41,12 +46,22 @@ app.use(express.json());
 app.post('/api/agent/init', initAgent);
 app.get('/api/agent/feed', getFeed);
 app.get('/api/cron/cycle', cronCycle);
+// Read-only convenience endpoint for the homepage UI — NOT part of the
+// evaluator-facing contract (init/feed are the only required endpoints).
+app.get('/api/ui/status', uiStatus);
 
 // Simple health check — useful for confirming the deploy is alive, not
 // part of the required spec.
 app.get('/health', (req, res) => {
   res.status(200).json({ status: 'ok' });
 });
+
+// Homepage — a small dashboard showing the persona's live feed, so a
+// visitor (or evaluator poking around beyond the required endpoints) sees
+// something more complete than a bare JSON 404 at "/". Static file, no
+// build step. Registered after the API routes and before the catch-all
+// 404 below, so it doesn't shadow anything.
+app.use(express.static(path.join(__dirname, '..', 'public')));
 
 // 404 for anything else — keeps unmatched routes from falling through to
 // a generic Express HTML error page.
@@ -59,11 +74,20 @@ app.use((req, res) => {
 // unexpected error mid-cycle. Must be defined last, with 4 args, for
 // Express to recognize it as an error handler.
 app.use((err, req, res, next) => {
-  logger.error('Unhandled error', err);
   if (res.headersSent) {
     return next(err);
   }
-  res.status(500).json({ error: 'Internal server error' });
+  // body-parser (and some other middleware) throw errors that already
+  // carry a meaningful client-error status (e.g. 400 for malformed JSON).
+  // Respect that instead of always reporting 500, so a bad request from
+  // the caller is correctly distinguished from an actual server failure.
+  const status = err.status && err.status >= 400 && err.status < 500 ? err.status : 500;
+  if (status >= 500) {
+    logger.error('Unhandled error', err);
+  } else {
+    logger.warn('Client error', err.message);
+  }
+  res.status(status).json({ error: status < 500 ? 'Malformed request' : 'Internal server error' });
 });
 
 // Only start a listening server when run directly (local dev). When

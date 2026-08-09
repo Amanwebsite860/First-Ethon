@@ -16,11 +16,16 @@
 // This keeps cost sane: most duplicate topics get caught by the free
 // heuristic, and the LLM is a fallback, not the first line of defense.
 
-import OpenAI from 'openai';
+import { GoogleGenAI } from '@google/genai';
 import logger from '../utils/logger.js';
 
-const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
-const JUDGE_MODEL = process.env.OPENAI_MODEL_JUDGE || 'gpt-4o-mini';
+const client = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+// Same fix as editorialJudge.js/writer.js — no hardcoded fallback. This
+// module was actually missed in the first pass at this fix (it's a third,
+// easy-to-overlook call site using the same env var), which is exactly
+// the kind of gap a "find every instance" grep should catch rather than
+// patching call sites one at a time as they're noticed.
+const JUDGE_MODEL = process.env.GEMINI_MODEL_JUDGE;
 
 // How many of the most recent posts to check the new topic against via LLM.
 // Keeps prompt size and cost bounded even as the feed grows over 48 hours.
@@ -32,11 +37,13 @@ function normalize(str) {
 
 /**
  * Cheap heuristic check: does this topic's URL or title closely match
- * something already published?
+ * something already published? Exported so scoring.js can reuse it as a
+ * pre-filter before candidates ever reach the (paid-quota) judge step,
+ * rather than duplicating this logic.
  * @param {{title: string, url: string}} topic
  * @param {Array<{text: string, sources: string[]}>} pastPosts
  */
-function isObviousDuplicate(topic, pastPosts) {
+export function isObviousDuplicate(topic, pastPosts) {
   const normTitle = normalize(topic.title);
   const normUrl = normalize(topic.url);
 
@@ -79,13 +86,16 @@ Respond with ONLY valid JSON, no markdown fences:
 { "isDuplicate": true or false, "reason": "one short sentence" }`;
 
   try {
-    const completion = await client.chat.completions.create({
+    const response = await client.models.generateContent({
       model: JUDGE_MODEL,
-      messages: [{ role: 'user', content: prompt }],
-      temperature: 0.2,
-      response_format: { type: 'json_object' },
+      contents: prompt,
+      config: {
+        temperature: 0.2,
+        responseMimeType: 'application/json',
+      },
     });
-    const parsed = JSON.parse(completion.choices[0]?.message?.content || '{}');
+    const raw = (response.text || '').trim().replace(/^```(?:json)?\s*/i, '').replace(/```\s*$/, '');
+    const parsed = JSON.parse(raw || '{}');
     return {
       isDuplicate: Boolean(parsed.isDuplicate),
       reason: parsed.reason || '',
