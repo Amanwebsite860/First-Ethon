@@ -140,6 +140,16 @@ you can stop relying on the GitHub Actions workflow — but as configured
 right now, **GitHub Actions is the trigger doing the real work**. Setup
 steps for the two repo secrets it needs (`AGENT_BASE_URL`, `CRON_SECRET`)
 are in `DEPLOY.md` step 5.
+<<<<<<< HEAD
+=======
+
+Two separate constraints shaped the every-2-hours number specifically —
+not just Vercel's plan limit, but also Gemini's own quota:
+
+**1. Vercel Cron plan limits.** Confirmed — Hobby fails deployment outright
+on any cron faster than once/day, which is why the real cadence had to move
+to GitHub Actions instead of `vercel.json`.
+>>>>>>> 929a73839a01636db85f07cc914164a649f976a1
 
 Two separate constraints shaped the every-2-hours number specifically —
 not just Vercel's plan limit, but also Gemini's own quota:

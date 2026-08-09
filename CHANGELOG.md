@@ -76,6 +76,7 @@ All notable progress on this project, in build order.
 - `vercel.json` cron changed from every-2-hours to **once-daily** (`"0 0 * * *"`) — the minimum Vercel Hobby allows — now serving as a harmless backup trigger rather than the real cadence.
 - `.github/workflows/trigger-cycle.yml` (every 2 hours) is now the actual publishing trigger, confirmed as the chosen path (Hobby plan, not upgrading to Pro).
 - `README.md` and `DEPLOY.md` rewritten to describe this as the configured setup directly, rather than as one branch of an if/else decision tree — removes ambiguity about which schedule is actually live.
+<<<<<<< HEAD
 
 ## [Unreleased] — Discovery, scoring, judge, and writer overhaul
 
@@ -116,3 +117,5 @@ Addresses reviewer feedback: single-source discovery was the biggest weakness in
 - `buildPersona()` tested directly with three cases: the hackathon spec's own example payload (`Ada` / `AI Security` — correctly reuses the full curated security template with the name swapped), an arbitrary unrelated domain (`Nova` / `Climate Tech` — correctly falls back to the generic template, domain-word keyword derivation confirmed), and no override (correctly defaults to Kai Renn / AI Security).
 - Full app boot-tested again after wiring `getAgent`/`buildPersona` through `cycle.js`.
 - Homepage boot-tested end-to-end: confirmed `GET /` returns `200 text/html` with the real page content (credits, spec grid, try-it commands all present in the served HTML), and confirmed `/api/ui/status` fails gracefully (caught, clean JSON 500) against invalid storage credentials rather than crashing — same pattern as every other storage-dependent route.
+=======
+>>>>>>> 929a73839a01636db85f07cc914164a649f976a1
